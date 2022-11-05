@@ -5,15 +5,15 @@ const profileController = require("../controllers/profile");
 const router = express.Router();
 
 // /profile/all => GET
-router.get("/tech/all", profileController.getProfiles);
+router.get("/all", profileController.getProfiles);
 
 // /profile/details => GET
-router.get("/tech/details/:username", profileController.getProfileDetailsById);
+router.get("/details/:username", profileController.getProfileDetailsById);
 
 // /profile/update => PUT
-router.put("/tech/update/:id", profileController.updateProfileDetailsById);
+router.put("/update/:id", profileController.updateProfileDetailsById);
 
 // /profile/delete => DELETE
-router.delete("/tech/delete/:id", profileController.deleteProfileById);
+router.delete("/delete/:id", profileController.deleteProfileById);
 
 module.exports = router;
