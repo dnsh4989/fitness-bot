@@ -4,19 +4,16 @@ const profileController = require("../controllers/profile");
 
 const router = express.Router();
 
-// /profile/add => POST
-router.post("/add", profileController.postAddProfile);
-
 // /profile/all => GET
-router.get("/all", profileController.getProfiles);
+router.get("/tech/all", profileController.getProfiles);
 
 // /profile/details => GET
-router.get("/details/:username", profileController.getProfileDetailsById);
+router.get("/tech/details/:username", profileController.getProfileDetailsById);
 
 // /profile/update => PUT
-router.put("/update/:id", profileController.updateProfileDetailsById);
+router.put("/tech/update/:id", profileController.updateProfileDetailsById);
 
 // /profile/delete => DELETE
-router.delete("/delete/:id", profileController.deleteProfileById);
+router.delete("/tech/delete/:id", profileController.deleteProfileById);
 
 module.exports = router;

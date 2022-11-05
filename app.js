@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoConnect = require("./util/database").mongoConnect;
 const profileRoutes = require("./routes/profile");
+const wellnessProfileRoutes = require("./routes/wellnessProfile");
 const retweetRoutes = require("./routes/retweet");
 const cors = require("cors");
 const { runReTweetJob, loopFunc } = require("./retweet-job");
@@ -16,7 +17,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/retweet", retweetRoutes);
-app.use("/profile", profileRoutes);
+app.use("/profile/tech", profileRoutes);
+app.use("/profile/wellness", wellnessProfileRoutes);
 
 mongoConnect(() => {
   app.listen(9000, () => {
