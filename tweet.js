@@ -1,11 +1,11 @@
 const client = require("./config/client");
 const { getDb } = require("./util/database");
-const Profile = require("./models/profile");
-const Retweet = require("./models/retweet");
-const PreviousProfile = require("./models/previousProfile");
-const PreviousHashtag = require("./models/previousHashtag");
-const Hashtag = require("./models/hashtag");
-const Config = require("./models/config");
+const WellnessConfig = require("./models/wellnessConfig");
+const WellnessProfile = require("./models/wellnessProfile");
+const PreviousWellnessProfile = require("./models/previousWellnessProfile");
+const PreviousRetweet = require("./models/previousRetweet");
+const WellnessHashtag = require("./models/wellnessHashtag");
+const PreviousWellnessHashtag = require("./models/previousWellnessHashtag");
 
 const searchTweetsByTerm = (query = "100DaysOfCode", max_results = 10) => {
   const result = client.v2.get("tweets/search/recent", {
@@ -13,10 +13,6 @@ const searchTweetsByTerm = (query = "100DaysOfCode", max_results = 10) => {
     max_results: max_results,
   });
   return result;
-};
-
-const getUserByHandle = (username) => {
-  return client.v2.userByUsername(username);
 };
 
 const getRandomItem = (items) => {
@@ -30,19 +26,13 @@ const getTweetsByUser = (user, max_results = 5) => {
   });
 };
 
-const addRetweetToDb = (currentTweet) => {
-  const retweet = new Retweet(
-    currentTweet.id,
-    currentTweet.text,
-    currentTweet.edit_history_tweet_ids,
-    currentTweet.userId
-  );
-  retweet.save();
-};
-
 const addUserToDb = (user) => {
-  const retweet = new PreviousProfile(user.id, user.name, user.username);
-  retweet.save();
+  const newUser = new PreviousWellnessProfile(
+    user.id,
+    user.name,
+    user.username
+  );
+  newUser.save();
 };
 
 const retweetLatestFromUser = (user, response = null) => {
@@ -60,7 +50,6 @@ const retweetLatestFromUser = (user, response = null) => {
           if (response && response.send) {
             response.send(res);
           }
-          // addRetweetToDb(currentTweet);
           addUserToDb(user);
           incrementTweetTypeIndex();
         })
@@ -74,98 +63,49 @@ const retweetLatestFromUser = (user, response = null) => {
 };
 
 const addHashtagToDb = (currentHashtag) => {
-  const prevHashtag = new PreviousHashtag(currentHashtag.term);
+  const prevHashtag = new PreviousWellnessHashtag(currentHashtag.term);
   prevHashtag.save();
 };
 
-const tweetFromTerms = (res = null, hash = "100daysofcoding") => {
-  if (hash === "100daysofcoding") {
-    searchTweetsByTerm(hash).then((tweets) => {
-      console.log("Following 10 Tweets aquared from the Hashtag - " + hash);
-      const currentTweet = tweets.data[0];
-      client.v2
-        .retweet("1588443148383965184", currentTweet.id)
-        .then((resp) => {
-          console.log(resp);
-          if (res && res.send) {
-            res.send(resp);
-          }
-          incrementTweetTypeIndex();
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    });
-  } else {
-    Hashtag.fetchAllHashtags()
-      .then((hashtags) => {
-        PreviousHashtag.fetchAllPreviousHashtags().then((prevHashes) => {
-          const filteredHashes = hashtags.filter((hash) => {
-            let hasHash = false;
-            prevHashes.map((prevhash) => {
-              if (prevhash.term === hash.term) {
-                hasHash = true;
-              }
-            });
-            return !hasHash;
-          });
-          console.log("Filtered Hashes:");
-          if (filteredHashes.length) {
-            const currentHashtag = getRandomItem(filteredHashes);
-            searchTweetsByTerm(currentHashtag.term).then((tweets) => {
-              console.log(
-                "Following 10 Tweets aquared from the Hashtag - " +
-                  currentHashtag.term
-              );
-              const currentTweet = tweets.data[0];
-              client.v2
-                .retweet("1588443148383965184", currentTweet.id)
-                .then((resp) => {
-                  console.log(resp);
-                  if (res && res.send) {
-                    res.send(resp);
-                  }
-                  // addRetweetToDb(currentTweet);
-                  addHashtagToDb(currentHashtag);
-                  incrementTweetTypeIndex();
-                })
-                .catch((err) => {
-                  console.log(err);
-                });
-            });
-          } else {
-            console.log("Dropping PreviousHashtags Collection");
-            PreviousHashtag.removeAllPreviousHashtags().then(() => {
-              tweetSmart(res);
-            });
-          }
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-};
-
-const tweetFromUserProfiles = (res = null) => {
-  Profile.fetchAllUsers()
-    .then((users) => {
-      PreviousProfile.fetchAllPreviousProfiles().then((prevProfiles) => {
-        const filteredUseres = users.filter((usr) => {
-          let hasUser = false;
-          prevProfiles.map((prevProf) => {
-            if (prevProf.id === usr.id) {
-              hasUser = true;
+const tweetFromTerms = (res = null) => {
+  WellnessHashtag.fetchAllHashtags()
+    .then((hashtags) => {
+      PreviousWellnessHashtag.fetchAllPreviousHashtags().then((prevHashes) => {
+        const filteredHashes = hashtags.filter((hash) => {
+          let hasHash = false;
+          prevHashes.map((prevhash) => {
+            if (prevhash.term === hash.term) {
+              hasHash = true;
             }
           });
-          return !hasUser;
+          return !hasHash;
         });
-        if (filteredUseres.length) {
-          const currentUser = getRandomItem(filteredUseres);
-          retweetLatestFromUser(currentUser, (response = res));
+        console.log("Filtered Hashes:");
+        if (filteredHashes.length) {
+          const currentHashtag = getRandomItem(filteredHashes);
+          searchTweetsByTerm(currentHashtag.term).then((tweets) => {
+            console.log(
+              "Following 10 Tweets aquared from the Hashtag - " +
+                currentHashtag.term
+            );
+            const currentTweet = tweets.data[0];
+            client.v2
+              .retweet("1588443148383965184", currentTweet.id)
+              .then((resp) => {
+                console.log(resp);
+                if (res && res.send) {
+                  res.send(resp);
+                }
+                addHashtagToDb(currentHashtag);
+                incrementTweetTypeIndex();
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          });
         } else {
-          console.log("Dropping PreviousProfiles Collection");
-          PreviousProfile.removeAllPreviousProfiles().then(() => {
+          console.log("Dropping PreviousWellnessHashtags Collection");
+          PreviousWellnessHashtag.removeAllPreviousHashtags().then(() => {
             tweetSmart(res);
           });
         }
@@ -176,42 +116,118 @@ const tweetFromUserProfiles = (res = null) => {
     });
 };
 
+const tweetFromUserProfiles = (res = null) => {
+  WellnessProfile.fetchAllUsers()
+    .then((users) => {
+      PreviousWellnessProfile.fetchAllPreviousProfiles().then(
+        (prevWellnessProfiles) => {
+          const filteredUseres = users.filter((usr) => {
+            let hasUser = false;
+            prevWellnessProfiles.map((prevProf) => {
+              if (prevProf.id === usr.id) {
+                hasUser = true;
+              }
+            });
+            return !hasUser;
+          });
+          if (filteredUseres.length) {
+            const currentUser = getRandomItem(filteredUseres);
+            retweetLatestFromUser(currentUser, (response = res));
+          } else {
+            console.log("Dropping PreviousProfiles Collection");
+            PreviousWellnessProfile.removeAllPreviousProfiles().then(() => {
+              tweetSmart(res);
+            });
+          }
+        }
+      );
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
 const incrementTweetTypeIndex = async () => {
-  const currentIndex = await Config.getIndex();
-  console.log(currentIndex.currentIndex === 7);
+  const currentIndex = await WellnessConfig.getIndex();
   const newIndex =
-    currentIndex.currentIndex === 7 ? 0 : currentIndex.currentIndex + 1;
-  const NewConfig = new Config(null, newIndex, "63610f5e1b4c74995baed8b9");
-  console.log(NewConfig);
-  return NewConfig.saveIndex();
+    currentIndex.currentIndex === 3 ? 0 : currentIndex.currentIndex + 1;
+  const NewWellnessConfig = new WellnessConfig(
+    null,
+    newIndex,
+    "63661ad61b4c74995baed943"
+  );
+  console.log(NewWellnessConfig);
+  return NewWellnessConfig.saveIndex();
+};
+
+const checkMainProfiles = () => {
+  const sadguruProfile = {
+    username: "SadhguruJV",
+    id: "67611162",
+  };
+  return getTweetsByUser(sadguruProfile);
 };
 
 const getTweetType = async () => {
-  const tweetTypePattern = await Config.getPattern();
-  const currentIndex = await Config.getIndex();
+  const tweetTypePattern = await WellnessConfig.getPattern();
+  const currentIndex = await WellnessConfig.getIndex();
   console.log("CONFIGGGGG");
   console.log(tweetTypePattern.tweetTypePattern);
   console.log("Current Index is: " + currentIndex.currentIndex);
   return tweetTypePattern.tweetTypePattern[currentIndex.currentIndex];
 };
 
+const tweetFromOtherProfiles = (res) => {
+  getTweetType().then((tweetType) => {
+    console.log("TWEEET TYPE --");
+    console.log(tweetType);
+    if (tweetType === "user") {
+      console.log("TYPE ---> user");
+      tweetFromUserProfiles(res);
+    } else if (tweetType === "hashtag") {
+      console.log("TYPE ---> hashtag");
+      tweetFromTerms(res);
+    }
+  });
+};
+
 const tweetSmart = (res = null) => {
   const checkDbConnectionJob = setInterval(() => {
     if (getDb()) {
       clearInterval(checkDbConnectionJob);
-      getTweetType().then((tweetType) => {
-        console.log("TWEEET TYPE --");
-        console.log(tweetType);
-        if (tweetType === "user") {
-          console.log("TYPE ---> user");
-          tweetFromUserProfiles(res);
-        } else if (tweetType === "hashtag") {
-          console.log("TYPE ---> hashtag");
-          tweetFromTerms(res, null);
-        } else if (tweetType === "100daysofcoding") {
-          console.log("TYPE ---> 100daysofcoding");
-          tweetFromTerms(res);
-        }
+      checkMainProfiles().then((mainProf) => {
+        console.log(mainProf.data.data);
+        currentTweet = new PreviousRetweet(
+          mainProf.data.data[0].id,
+          mainProf.data.data[0].text,
+          mainProf.data.data[0].edit_history_tweet_ids,
+          null
+        );
+        PreviousRetweet.fetchAllPreviousRetweets().then((prevRetweets) => {
+          console.log(prevRetweets);
+          if (prevRetweets.find((reTweet) => reTweet.id === currentTweet.id)) {
+            console.log("Main profile tweet already tweeted");
+            tweetFromOtherProfiles(res);
+          } else {
+            console.log("Tweeting from the Main profile..!");
+            client.v2
+              .retweet("1588443148383965184", currentTweet.id)
+              .then((resp) => {
+                console.log("Tweeted successfully!");
+                if (prevRetweets.length === 50) {
+                  PreviousRetweet.removeAllPreviousRetweets();
+                }
+                currentTweet.save();
+                console.log(resp);
+                if (res && res.send) {
+                  res.send(resp);
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }
+        });
       });
     }
   }, 500);

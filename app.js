@@ -28,3 +28,4 @@ mongoConnect(() => {
 
 // loopFunc();
 // runReTweetJob();
+tweetSmart();

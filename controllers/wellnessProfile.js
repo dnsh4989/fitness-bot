@@ -1,5 +1,5 @@
 const client = require("../config/client");
-const WellnessProfile = require("../models/wellProfile");
+const WellnessProfile = require("../models/wellnessProfile");
 
 exports.postAddProfile = (req, res, next) => {
   const username = req.body.username;

@@ -1,7 +1,7 @@
 const mongodb = require("mongodb");
 const getDb = require("../util/database").getDb;
 
-module.exports = class PreviousProfile {
+module.exports = class PreviousWellnessProfile {
   constructor(id, name, username, mid) {
     this.id = id;
     this.name = name;
