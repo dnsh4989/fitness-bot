@@ -81,6 +81,7 @@ const tweetFromTerms = (res = null) => {
           return !hasHash;
         });
         console.log("Filtered Hashes:");
+        console.log(filteredHashes);
         if (filteredHashes.length) {
           const currentHashtag = getRandomItem(filteredHashes);
           searchTweetsByTerm(currentHashtag.term).then((tweets) => {
